@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可轉債查詢工具 - Rex大叔投資資料庫</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            overflow-x: auto;
+        }
+        
+        .nav-tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 1em;
+            font-weight: 500;
+            color: #495057;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+        
+        .nav-tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .content {
+            padding: 30px;
+            min-height: 600px;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .data-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .rank-badge {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .rank-1 { background: #ffd700; }
+        .rank-2 { background: #c0c0c0; }
+        .rank-3 { background: #cd7f32; }
+        .rank-other { background: #6c757d; }
+        
+        .positive { color: #dc3545; font-weight: bold; }
+        .negative { color: #28a745; font-weight: bold; }
+        
+        .week-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .week-button {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+        
+        .week-button:hover {
+            background: #f8f9fa;
+        }
+        
+        .week-button.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: #6c757d;
+        }
+        
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 1em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .chart-container {
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // 示範資料 - 實際使用時會從GitHub讀取
+        const sampleWeeklyData = {
+            "week_period": "2025/10/20~2025/10/23",
+            "date": "2025-10-23",
+            "top_volume": [
+                {"rank": 1, "code": "30454", "name": "台灣大四", "volume": 4645},
+                {"rank": 2, "code": "62822", "name": "康舒二", "volume": 2612},
+                {"rank": 3, "code": "82992", "name": "群聯二", "volume": 2463},
+                {"rank": 4, "code": "84221", "name": "可寧衛一", "volume": 2376},
+                {"rank": 5, "code": "61635", "name": "華電網五", "volume": 2252},
+                {"rank": 6, "code": "23372", "name": "旺宏二", "volume": 2214},
+                {"rank": 7, "code": "62194", "name": "富旺四", "volume": 2048},
+                {"rank": 8, "code": "65841", "name": "南俊國際一", "volume": 1423},
+                {"rank": 9, "code": "811210", "name": "至上十", "volume": 1376},
+                {"rank": 10, "code": "27531", "name": "八方雲集一", "volume": 1349}
+            ],
+            "top_gainers": [
+                {"rank": 1, "code": "33571", "name": "臺慶科一", "close_price": 149.00, "change_pct": 11.19},
+                {"rank": 2, "code": "23372", "name": "旺宏二", "close_price": 130.50, "change_pct": 11.06},
+                {"rank": 3, "code": "36894", "name": "湧德四", "close_price": 168.00, "change_pct": 9.80},
+                {"rank": 4, "code": "62843", "name": "佳邦三", "close_price": 117.20, "change_pct": 7.52},
+                {"rank": 5, "code": "61635", "name": "華電網五", "close_price": 114.90, "change_pct": 7.28},
+                {"rank": 6, "code": "62822", "name": "康舒二", "close_price": 112.00, "change_pct": 6.67},
+                {"rank": 7, "code": "37075", "name": "漢磊五", "close_price": 149.00, "change_pct": 6.58},
+                {"rank": 8, "code": "65841", "name": "南俊國際一", "close_price": 150.00, "change_pct": 6.53},
+                {"rank": 9, "code": "84041", "name": "百和興業一KY", "close_price": 122.60, "change_pct": 5.60},
+                {"rank": 10, "code": "66451", "name": "金萬林一創", "close_price": 112.35, "change_pct": 5.59}
+            ],
+            "top_losers": [
+                {"rank": 1, "code": "47223", "name": "國精化三", "close_price": 130.00, "change_pct": -8.74},
+                {"rank": 2, "code": "84672", "name": "波力二KY", "close_price": 110.65, "change_pct": -6.15},
+                {"rank": 3, "code": "61965", "name": "帆宣五", "close_price": 172.00, "change_pct": -5.49},
+                {"rank": 4, "code": "33133", "name": "斐成三", "close_price": 117.50, "change_pct": -5.05},
+                {"rank": 5, "code": "84891", "name": "三貝德一", "close_price": 160.00, "change_pct": -4.76},
+                {"rank": 6, "code": "52843", "name": "jpp三KY", "close_price": 180.00, "change_pct": -4.26},
+                {"rank": 7, "code": "80282", "name": "昇陽半導體二", "close_price": 126.05, "change_pct": -4.14},
+                {"rank": 8, "code": "54342", "name": "崇越二", "close_price": 173.00, "change_pct": -3.89},
+                {"rank": 9, "code": "69821", "name": "大井泵浦一", "close_price": 109.15, "change_pct": -3.49},
+                {"rank": 10, "code": "67531", "name": "龍德造船一", "close_price": 125.00, "change_pct": -3.40}
+            ],
+            "conversions": [
+                {"code": "64146", "name": "樺漢六", "this_week": 10000, "last_week": 13940, "converted": -3940, "remaining_pct": 66.66},
+                {"code": "62235", "name": "旺矽五", "this_week": 19305, "last_week": 22999, "converted": -3694, "remaining_pct": 55.15},
+                {"code": "36534", "name": "健策四", "this_week": 9659, "last_week": 11264, "converted": -1605, "remaining_pct": 32.19},
+                {"code": "82992", "name": "群聯二", "this_week": 54775, "last_week": 56279, "converted": -1504, "remaining_pct": 91.29},
+                {"code": "64723", "name": "保瑞三", "this_week": 5128, "last_week": 5982, "converted": -854, "remaining_pct": 30.16}
+            ],
+            "redemptions": [
+                {"code": "99211", "name": "巨大一", "original": 40000, "outstanding": 759, "remaining_pct": 1.89, "delist_date": "2025/10/30"},
+                {"code": "52843", "name": "jpp三KY", "original": 3000, "outstanding": 32, "remaining_pct": 1.06, "delist_date": "2025/11/17"},
+                {"code": "64421", "name": "光聖一", "original": 10000, "outstanding": 1731, "remaining_pct": 17.31, "delist_date": "2025/11/19"},
+                {"code": "64723", "name": "保瑞三", "original": 17000, "outstanding": 5128, "remaining_pct": 30.16, "delist_date": "2025/11/21"},
+                {"code": "64144", "name": "樺漢四", "original": 10000, "outstanding": 136, "remaining_pct": 1.36, "delist_date": "2025/11/21"},
+                {"code": "34912", "name": "昇達科二", "original": 10000, "outstanding": 5386, "remaining_pct": 53.86, "delist_date": "2025/12/8"}
+            ]
+        };
+        
+        function App() {
+            const [activeTab, setActiveTab] = useState('週報');
+            const [weeklyData, setWeeklyData] = useState(sampleWeeklyData);
+            const [searchTerm, setSearchTerm] = useState('');
+            
+            const tabs = ['週報', '成交量排行', '漲跌幅排行', '轉換追蹤', '贖回公告', '趨勢分析'];
+            
+            const getRankBadgeClass = (rank) => {
+                if (rank === 1) return 'rank-badge rank-1';
+                if (rank === 2) return 'rank-badge rank-2';
+                if (rank === 3) return 'rank-badge rank-3';
+                return 'rank-badge rank-other';
+            };
+            
+            const renderContent = () => {
+                switch(activeTab) {
+                    case '週報':
+                        return (
+                            <div>
+                                <div className="stat-cards">
+                                    <div className="stat-card">
+                                        <h3>資料期間</h3>
+                                        <div className="value">{weeklyData.week_period}</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3>成交量前10名</h3>
+                                        <div className="value">{weeklyData.top_volume.length}檔</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3>漲跌幅排行</h3>
+                                        <div className="value">{weeklyData.top_gainers.length + weeklyData.top_losers.length}檔</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <h3>轉換追蹤</h3>
+                                        <div className="value">{weeklyData.conversions.length}檔</div>
+                                    </div>
+                                </div>
+                                
+                                <h2 style={{marginTop: '30px', marginBottom: '15px', color: '#667eea'}}>本週重點摘要</h2>
+                                <div style={{background: '#f8f9fa', padding: '20px', borderRadius: '10px', lineHeight: '1.8'}}>
+                                    <p>📊 <strong>成交最熱門:</strong> {weeklyData.top_volume[0].name}({weeklyData.top_volume[0].code}) 成交 {weeklyData.top_volume[0].volume.toLocaleString()} 張</p>
+                                    <p style={{marginTop: '10px'}}>📈 <strong>漲幅最大:</strong> {weeklyData.top_gainers[0].name}({weeklyData.top_gainers[0].code}) 上漲 {weeklyData.top_gainers[0].change_pct}%</p>
+                                    <p style={{marginTop: '10px'}}>📉 <strong>跌幅最大:</strong> {weeklyData.top_losers[0].name}({weeklyData.top_losers[0].code}) 下跌 {weeklyData.top_losers[0].change_pct}%</p>
+                                    <p style={{marginTop: '10px'}}>🔄 <strong>轉換最多:</strong> {weeklyData.conversions[0].name}({weeklyData.conversions[0].code}) 轉換 {Math.abs(weeklyData.conversions[0].converted).toLocaleString()} 張</p>
+                                </div>
+                            </div>
+                        );
+                        
+                    case '成交量排行':
+                        return (
+                            <div>
+                                <div className="search-box">
+                                    <input 
+                                        type="text" 
+                                        className="search-input" 
+                                        placeholder="搜尋CB名稱或代碼..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>排名</th>
+                                            <th>代碼</th>
+                                            <th>名稱</th>
+                                            <th>成交量(張)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {weeklyData.top_volume
+                                            .filter(item => 
+                                                item.name.includes(searchTerm) || 
+                                                item.code.includes(searchTerm)
+                                            )
+                                            .map(item => (
+                                                <tr key={item.code}>
+                                                    <td>
+                                                        <span className={getRankBadgeClass(item.rank)}>
+                                                            {item.rank}
+                                                        </span>
+                                                    </td>
+                                                    <td>{item.code}</td>
+                                                    <td><strong>{item.name}</strong></td>
+                                                    <td>{item.volume.toLocaleString()}</td>
+                                                </tr>
+                                            ))
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        );
+                        
+                    case '漲跌幅排行':
+                        return (
+                            <div>
+                                <h2 style={{marginBottom: '15px', color: '#dc3545'}}>漲幅前10名</h2>
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>排名</th>
+                                            <th>代碼</th>
+                                            <th>名稱</th>
+                                            <th>收盤價</th>
+                                            <th>漲幅%</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {weeklyData.top_gainers.map(item => (
+                                            <tr key={item.code}>
+                                                <td>
+                                                    <span className={getRankBadgeClass(item.rank)}>
+                                                        {item.rank}
+                                                    </span>
+                                                </td>
+                                                <td>{item.code}</td>
+                                                <td><strong>{item.name}</strong></td>
+                                                <td>{item.close_price.toFixed(2)}</td>
+                                                <td className="positive">+{item.change_pct}%</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                
+                                <h2 style={{marginTop: '40px', marginBottom: '15px', color: '#28a745'}}>跌幅前10名</h2>
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>排名</th>
+                                            <th>代碼</th>
+                                            <th>名稱</th>
+                                            <th>收盤價</th>
+                                            <th>跌幅%</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {weeklyData.top_losers.map(item => (
+                                            <tr key={item.code}>
+                                                <td>
+                                                    <span className={getRankBadgeClass(item.rank)}>
+                                                        {item.rank}
+                                                    </span>
+                                                </td>
+                                                <td>{item.code}</td>
+                                                <td><strong>{item.name}</strong></td>
+                                                <td>{item.close_price.toFixed(2)}</td>
+                                                <td className="negative">{item.change_pct}%</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        );
+                        
+                    case '轉換追蹤':
+                        return (
+                            <div>
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>代碼</th>
+                                            <th>名稱</th>
+                                            <th>本週張數</th>
+                                            <th>上週張數</th>
+                                            <th>轉換張數</th>
+                                            <th>剩餘比率</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {weeklyData.conversions.map(item => (
+                                            <tr key={item.code}>
+                                                <td>{item.code}</td>
+                                                <td><strong>{item.name}</strong></td>
+                                                <td>{item.this_week.toLocaleString()}</td>
+                                                <td>{item.last_week.toLocaleString()}</td>
+                                                <td className="negative">{item.converted.toLocaleString()}</td>
+                                                <td>{item.remaining_pct}%</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        );
+                        
+                    case '贖回公告':
+                        return (
+                            <div>
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>代碼</th>
+                                            <th>名稱</th>
+                                            <th>原發行張數</th>
+                                            <th>流通在外</th>
+                                            <th>剩餘比率</th>
+                                            <th>終止掛牌日</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {weeklyData.redemptions.map(item => (
+                                            <tr key={item.code}>
+                                                <td>{item.code}</td>
+                                                <td><strong>{item.name}</strong></td>
+                                                <td>{item.original.toLocaleString()}</td>
+                                                <td>{item.outstanding.toLocaleString()}</td>
+                                                <td style={{color: item.remaining_pct < 10 ? '#dc3545' : '#000'}}>
+                                                    {item.remaining_pct}%
+                                                </td>
+                                                <td>{item.delist_date}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        );
+                        
+                    case '趨勢分析':
+                        return (
+                            <div>
+                                <div className="chart-container">
+                                    <h3 style={{marginBottom: '20px', color: '#667eea'}}>趨勢分析功能</h3>
+                                    <p style={{color: '#6c757d', lineHeight: '1.8'}}>
+                                        當累積多週資料後，此功能將顯示：<br/>
+                                        • 各檔CB的成交量趨勢圖<br/>
+                                        • 價格走勢變化<br/>
+                                        • 轉換張數累積變化<br/>
+                                        • 市場熱門CB追蹤<br/><br/>
+                                        請持續上傳每週資料以建立完整的歷史資料庫
+                                    </p>
+                                </div>
+                            </div>
+                        );
+                        
+                    default:
+                        return <div>選擇功能</div>;
+                }
+            };
+            
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>🔍 可轉債查詢工具</h1>
+                        <p>Rex大叔投資資料庫 - 專業、即時、完整的CB市場資訊</p>
+                    </div>
+                    
+                    <div className="nav-tabs">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab}
+                                className={`nav-tab ${activeTab === tab ? 'active' : ''}`}
+                                onClick={() => setActiveTab(tab)}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+                    
+                    <div className="content">
+                        {renderContent()}
+                    </div>
+                    
+                    <div className="footer">
+                        <p>資料來源：元大證券債券部 | 更新日期：{weeklyData.date}</p>
+                        <p style={{marginTop: '5px'}}>本資料僅供參考使用，投資人應依據個人專業判斷進行投資決策</p>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
