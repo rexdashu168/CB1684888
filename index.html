@@ -260,6 +260,12 @@
             font-weight: bold;
         }
 
+        /* 連結hover效果 */
+        a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
         .highlight {
             background: #fff3cd !important;
         }
@@ -352,8 +358,49 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 元大可轉債資料查詢系統</h1>
-            <p>提供即時可轉債報價、贖回資訊、流通餘額等完整查詢功能</p>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px;">
+                <span style="font-size: 42px;">🎯</span>
+                <h1 style="margin: 0; font-size: 36px; font-weight: 700;">元大可轉債查詢系統</h1>
+            </div>
+            <p style="color: rgba(255,255,255,0.95); font-size: 16px; margin: 15px 0; font-weight: 500;">
+                競拍統計數據 | 智能模擬分析 | 投標價格試算
+            </p>
+            <div style="display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; margin: 20px 0;">
+                <div style="background: rgba(255,255,255,0.25); padding: 10px 20px; border-radius: 25px; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                    <span>📅</span>
+                    <span id="current-date"></span>
+                </div>
+                <a href="https://vocus.cc/user/@rexlife" target="_blank" style="background: rgba(255,255,255,0.25); padding: 10px 20px; border-radius: 25px; font-size: 15px; text-decoration: none; color: white; display: flex; align-items: center; gap: 8px; transition: all 0.3s;">
+                    <span>📝</span>
+                    <span>方格子部落格</span>
+                </a>
+                <a href="https://www.youtube.com/@RexCFP" target="_blank" style="background: rgba(255,255,255,0.25); padding: 10px 20px; border-radius: 25px; font-size: 15px; text-decoration: none; color: white; display: flex; align-items: center; gap: 8px; transition: all 0.3s;">
+                    <span>▶️</span>
+                    <span>YouTube頻道</span>
+                </a>
+            </div>
+            <p style="color: rgba(255,255,255,0.9); font-size: 14px; margin-top: 15px;">
+                by Rex大叔的168台股投資教室
+            </p>
+            
+            <!-- 瀏覽量統計 -->
+            <div style="display: flex; gap: 20px; justify-content: center; margin-top: 15px; font-size: 14px;">
+                <div style="background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 15px;">
+                    <span>👁️ 今日瀏覽: </span>
+                    <span id="today-views" style="font-weight: 600;">0</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 15px;">
+                    <span>📊 累積瀏覽: </span>
+                    <span id="total-views" style="font-weight: 600;">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 資料期間資訊條 -->
+        <div style="background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%); padding: 12px 20px; margin: 20px 0; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <span style="color: #2d3436; font-size: 15px; font-weight: 600;">
+                📊 資料更新日期：<span id="data-period">載入中...</span>
+            </span>
         </div>
 
         <div class="upload-section">
@@ -840,8 +887,8 @@
                 return { highest: '-', lowest: '-', range: '-' };
             }
             
-            const highest = parseFloat(priceData['最高價']) || 0;
-            const lowest = parseFloat(priceData['最低價']) || 0;
+            const highest = parseFloat(priceData['掛牌最高']) || 0;
+            const lowest = parseFloat(priceData['掛牌最低']) || 0;
             const range = highest && lowest ? ((highest - lowest) / lowest * 100).toFixed(2) : '-';
             
             return {
@@ -1547,6 +1594,91 @@
                 document.getElementById(iconId).textContent = order === 'asc' ? '↑' : '↓';
             }
         }
+
+        // 更新當前日期
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            const dateStr = now.toLocaleDateString('zh-TW', options);
+            document.getElementById('current-date').textContent = dateStr;
+            
+            // 更新資料期間
+            const updateTime = now.toLocaleString('zh-TW');
+            document.getElementById('data-period').textContent = updateTime;
+        }
+
+        // 瀏覽量統計
+        function updateViewCount() {
+            const today = new Date().toDateString();
+            const storedDate = localStorage.getItem('visitDate');
+            const todayViews = parseInt(localStorage.getItem('todayViews') || '0');
+            const totalViews = parseInt(localStorage.getItem('totalViews') || '0');
+
+            if (storedDate === today) {
+                localStorage.setItem('todayViews', (todayViews + 1).toString());
+            } else {
+                localStorage.setItem('visitDate', today);
+                localStorage.setItem('todayViews', '1');
+            }
+            
+            localStorage.setItem('totalViews', (totalViews + 1).toString());
+            
+            document.getElementById('today-views').textContent = localStorage.getItem('todayViews');
+            document.getElementById('total-views').textContent = localStorage.getItem('totalViews');
+        }
+
+        // 頁面載入時執行
+        window.addEventListener('load', function() {
+            updateCurrentDate();
+            updateViewCount();
+        });
     </script>
+
+    <!-- 風險提醒和版權資訊 -->
+    <div style="margin: 40px 0 20px 0;">
+        <!-- 重要提示 -->
+        <div style="background: linear-gradient(135deg, #fff9e6 0%, #ffe5b4 100%); border: 2px solid #f39c12; border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <span style="font-size: 24px;">⚠️</span>
+                <h3 style="margin: 0; color: #e67e22; font-size: 18px; font-weight: 700;">重要提示</h3>
+            </div>
+            <div style="color: #5d4037; line-height: 1.8; font-size: 15px;">
+                <p style="margin: 10px 0;">本系統提供歷史數據統計與資料整理，所有數據僅供參考，不構成任何投資建議</p>
+                <p style="margin: 10px 0;">過去表現不代表未來結果，投資決策請自行評估風險</p>
+            </div>
+        </div>
+
+        <!-- 資料來源和版權 -->
+        <div style="background: linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%); border-radius: 15px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <p style="color: #5c6bc0; font-size: 15px; margin: 8px 0;">
+                    <strong>資料來源：</strong>證券櫃檯買賣中心
+                </p>
+                <p style="color: #e67e22; font-size: 14px; margin: 8px 0;">
+                    ⚠️ 本表僅供參考，投資決策請自行評估風險
+                </p>
+            </div>
+            
+            <div style="border-top: 2px solid rgba(92, 107, 192, 0.3); padding-top: 15px; margin-top: 15px;">
+                <div style="text-align: center;">
+                    <p style="color: #5c6bc0; font-size: 15px; font-weight: 600; margin: 10px 0;">
+                        📚 Rex大叔的168台股投資教室
+                    </p>
+                    <p style="color: #7986cb; font-size: 14px; margin: 8px 0;">
+                        更多投資觀念與CB轉債分析，歡迎訂閱學習
+                    </p>
+                    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
+                        <a href="https://vocus.cc/user/@rexlife" target="_blank" style="color: #5c6bc0; text-decoration: none; font-size: 14px; padding: 8px 16px; background: white; border-radius: 20px; transition: all 0.3s; display: inline-block;">
+                            📝 方格子部落格
+                        </a>
+                        <a href="https://www.youtube.com/@RexCFP" target="_blank" style="color: #5c6bc0; text-decoration: none; font-size: 14px; padding: 8px 16px; background: white; border-radius: 20px; transition: all 0.3s; display: inline-block;">
+                            ▶️ YouTube頻道
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
