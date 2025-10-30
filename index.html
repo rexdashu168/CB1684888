@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>元大可轉債資料查詢系統</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .upload-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .upload-box {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-block;
+            font-weight: bold;
+        }
+
+        .file-input-label:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-name {
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .update-time {
+            margin-left: auto;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .filters {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-buttons {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .positive {
+            color: #dc3545;
+        }
+
+        .negative {
+            color: #28a745;
+        }
+
+        .highlight {
+            background: #fff3cd !important;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .change {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            color: #0c5460;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .tabs {
+                flex-wrap: nowrap;
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 元大可轉債資料查詢系統</h1>
+            <p>提供即時可轉債報價、贖回資訊、流通餘額等完整查詢功能</p>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-box">
+                <div class="file-input-wrapper">
+                    <label class="file-input-label" for="file-upload">
+                        📁 選擇每週CB資料庫
+                    </label>
+                    <input type="file" id="file-upload" accept=".xlsx,.xls">
+                </div>
+                <span class="file-name" id="file-name">尚未選擇檔案</span>
+                
+                <div class="file-input-wrapper" style="margin-left: 20px;">
+                    <label class="file-input-label" for="file-upload-primary">
+                        📁 選擇CB發行案件彙整
+                    </label>
+                    <input type="file" id="file-upload-primary" accept=".xlsx,.xls">
+                </div>
+                <span class="file-name" id="file-name-primary">尚未選擇檔案</span>
+                
+                <span class="update-time" id="update-time"></span>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="quote">即時報價</button>
+            <button class="tab" data-tab="primary">初級市場</button>
+            <button class="tab" data-tab="issued">已發行案件</button>
+            <button class="tab" data-tab="filter">進階篩選</button>
+            <button class="tab" data-tab="redeem">贖回資訊</button>
+            <button class="tab" data-tab="stop">停止轉換</button>
+            <button class="tab" data-tab="balance">流通餘額</button>
+            <button class="tab" data-tab="adjust">價格調整</button>
+            <button class="tab" data-tab="daily">每日行情</button>
+        </div>
+
+        <!-- 即時報價 -->
+        <div id="quote" class="tab-content active">
+            <div class="stats-grid" id="stats-grid"></div>
+            <div class="table-wrapper">
+                <table id="quote-table">
+                    <thead>
+                        <tr>
+                            <th>代碼</th>
+                            <th>名稱</th>
+                            <th>產業</th>
+                            <th>權利金</th>
+                            <th>轉換價格</th>
+                            <th>CB參考價</th>
+                            <th>溢折價%</th>
+                            <th>剩餘年期</th>
+                            <th>到期日</th>
+                            <th>信評</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quote-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 初級市場 -->
+        <div id="primary" class="tab-content">
+            <div class="alert alert-info">
+                <span>💡</span>
+                <div>
+                    <strong>初級市場資訊：</strong>即將發行或正在詢圈/競拍的可轉債案件
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="primary-table">
+                    <thead>
+                        <tr>
+                            <th>標的代號</th>
+                            <th>發行標的</th>
+                            <th>詢圈/競拍</th>
+                            <th>TCRI/擔保</th>
+                            <th>發行量(億)</th>
+                            <th>主辦券商</th>
+                            <th>生效日</th>
+                            <th>詢圈/投標期間</th>
+                            <th>溢價率</th>
+                            <th>轉換價格</th>
+                            <th>掛牌日</th>
+                            <th>承銷價格</th>
+                            <th>年期</th>
+                            <th>賣回條件</th>
+                            <th>備註</th>
+                        </tr>
+                    </thead>
+                    <tbody id="primary-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 已發行案件 -->
+        <div id="issued" class="tab-content">
+            <div class="alert alert-info">
+                <span>📋</span>
+                <div>
+                    <strong>歷史發行記錄：</strong>已完成發行的可轉債案件資料
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="issued-table">
+                    <thead>
+                        <tr>
+                            <th>代碼</th>
+                            <th>發行標的</th>
+                            <th>TCRI/擔保</th>
+                            <th>額度(億)</th>
+                            <th>主辦券商</th>
+                            <th>送件日</th>
+                            <th>生效日</th>
+                            <th>詢圈期間</th>
+                            <th>溢價率</th>
+                            <th>轉換價格</th>
+                            <th>掛牌日期</th>
+                            <th>承銷價格</th>
+                            <th>年期</th>
+                            <th>賣回條件</th>
+                        </tr>
+                    </thead>
+                    <tbody id="issued-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 進階篩選 -->
+        <div id="filter" class="tab-content">
+            <div class="filters">
+                <div class="filter-group">
+                    <label>產業</label>
+                    <select id="filter-industry">
+                        <option value="">全部產業</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>溢折價% (最小)</label>
+                    <input type="number" id="filter-premium-min" placeholder="例: -10">
+                </div>
+                <div class="filter-group">
+                    <label>溢折價% (最大)</label>
+                    <input type="number" id="filter-premium-max" placeholder="例: 50">
+                </div>
+                <div class="filter-group">
+                    <label>剩餘年期 (最小)</label>
+                    <input type="number" step="0.1" id="filter-years-min" placeholder="例: 0.5">
+                </div>
+                <div class="filter-group">
+                    <label>剩餘年期 (最大)</label>
+                    <input type="number" step="0.1" id="filter-years-max" placeholder="例: 3">
+                </div>
+                <div class="filter-group">
+                    <label>信用評等</label>
+                    <select id="filter-rating">
+                        <option value="">全部評等</option>
+                    </select>
+                </div>
+                <div class="filter-buttons">
+                    <button class="btn btn-primary" onclick="applyFilters()">套用篩選</button>
+                    <button class="btn btn-secondary" onclick="resetFilters()">重設</button>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="filter-table">
+                    <thead>
+                        <tr>
+                            <th>代碼</th>
+                            <th>名稱</th>
+                            <th>產業</th>
+                            <th>CB參考價</th>
+                            <th>轉換價格</th>
+                            <th>溢折價%</th>
+                            <th>剩餘年期</th>
+                            <th>波動率120天</th>
+                            <th>波動率240天</th>
+                            <th>信評</th>
+                        </tr>
+                    </thead>
+                    <tbody id="filter-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 贖回資訊 -->
+        <div id="redeem" class="tab-content">
+            <div class="alert alert-warning">
+                <span>⚠️</span>
+                <div>
+                    <strong>重要提醒：</strong>以下為公司已執行或即將執行贖回權的可轉債,請注意ASO到期日
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="redeem-table">
+                    <thead>
+                        <tr>
+                            <th>公司代號</th>
+                            <th>公司名稱</th>
+                            <th>申報日期</th>
+                            <th>ASO到期日</th>
+                            <th>主旨</th>
+                        </tr>
+                    </thead>
+                    <tbody id="redeem-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 停止轉換 -->
+        <div id="stop" class="tab-content">
+            <div class="alert alert-info">
+                <span>ℹ️</span>
+                <div>
+                    <strong>停止轉換期間：</strong>以下可轉債在指定期間無法進行轉換
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="stop-table">
+                    <thead>
+                        <tr>
+                            <th>債券代碼</th>
+                            <th>債券簡稱</th>
+                            <th>停止轉換起日</th>
+                            <th>停止轉換迄日</th>
+                            <th>停止轉換事由</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stop-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 流通餘額 -->
+        <div id="balance" class="tab-content">
+            <div class="table-wrapper">
+                <table id="balance-table">
+                    <thead>
+                        <tr>
+                            <th>證券代號</th>
+                            <th>證券名稱</th>
+                            <th>本週股額</th>
+                            <th>上週股額</th>
+                            <th>增減數額</th>
+                            <th>增減比率%</th>
+                            <th>剩餘比率%</th>
+                        </tr>
+                    </thead>
+                    <tbody id="balance-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 價格調整 -->
+        <div id="adjust" class="tab-content">
+            <div class="alert alert-warning">
+                <span>⚠️</span>
+                <div>
+                    <strong>轉換價格調整：</strong>以下可轉債的轉換價格已調整或即將調整
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="adjust-table">
+                    <thead>
+                        <tr>
+                            <th>公司代號</th>
+                            <th>公司名稱</th>
+                            <th>調整資訊</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adjust-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 每日行情 -->
+        <div id="daily" class="tab-content">
+            <div class="table-wrapper">
+                <table id="daily-table">
+                    <thead>
+                        <tr>
+                            <th>代碼</th>
+                            <th>名稱</th>
+                            <th>產業</th>
+                            <th>CB收盤價</th>
+                            <th>成交量</th>
+                            <th>股價</th>
+                            <th>轉換價格</th>
+                            <th>轉換價值</th>
+                            <th>溢折價%</th>
+                            <th>YTM</th>
+                            <th>TCRI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="daily-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let workbookData = {};
+        let primaryData = {};
+        let currentData = {};
+
+        // 每週CB資料庫檔案上傳處理
+        document.getElementById('file-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('file-name').textContent = file.name;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    workbookData = {};
+                    workbook.SheetNames.forEach(sheetName => {
+                        workbookData[sheetName] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+                            raw: false,
+                            defval: ''
+                        });
+                    });
+
+                    updateTime();
+                    loadAllData();
+                } catch (error) {
+                    alert('檔案讀取失敗: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // CB發行案件彙整檔案上傳處理
+        document.getElementById('file-upload-primary').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('file-name-primary').textContent = file.name;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    primaryData = {};
+                    workbook.SheetNames.forEach(sheetName => {
+                        primaryData[sheetName] = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+                            raw: false,
+                            defval: ''
+                        });
+                    });
+
+                    updateTime();
+                    loadPrimaryData();
+                } catch (error) {
+                    alert('檔案讀取失敗: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('update-time').textContent = 
+                `更新時間: ${now.toLocaleString('zh-TW')}`;
+        }
+
+        // Tab切換
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
+                
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                this.classList.add('active');
+                document.getElementById(tabName).classList.add('active');
+            });
+        });
+
+        function loadAllData() {
+            if (!workbookData['報價單']) {
+                alert('找不到報價單工作表');
+                return;
+            }
+
+            currentData.quote = workbookData['報價單'].filter(row => row['可轉債名稱']);
+            currentData.basic = workbookData['基本資料檔'] || [];
+            currentData.redeem = workbookData['公司執行贖回權'] || [];
+            currentData.stop = workbookData['停止轉換資訊'] || [];
+            currentData.balance = workbookData['CB流通在外餘額'] || [];
+            currentData.adjust = workbookData['轉換價格調整'] || [];
+            currentData.daily = workbookData['CB每日行情表'] || [];
+
+            loadQuoteTable();
+            loadRedeemTable();
+            loadStopTable();
+            loadBalanceTable();
+            loadAdjustTable();
+            loadDailyTable();
+            loadFilterOptions();
+            loadStats();
+        }
+
+        function loadPrimaryData() {
+            if (!primaryData['發行案件']) {
+                alert('找不到發行案件工作表');
+                return;
+            }
+
+            loadPrimaryTable();
+            loadIssuedTable();
+        }
+
+        function loadStats() {
+            if (!currentData.quote || currentData.quote.length === 0) return;
+
+            const totalCB = currentData.quote.length;
+            const avgPremium = currentData.quote.reduce((sum, row) => {
+                const premium = parseFloat(row['溢(折)價%']) || 0;
+                return sum + premium;
+            }, 0) / totalCB;
+
+            const positiveCount = currentData.quote.filter(row => {
+                const premium = parseFloat(row['溢(折)價%']) || 0;
+                return premium > 0;
+            }).length;
+
+            const negativeCount = totalCB - positiveCount;
+
+            const statsHTML = `
+                <div class="stat-card">
+                    <h3>可轉債總數</h3>
+                    <div class="value">${totalCB}</div>
+                    <div class="change">檔</div>
+                </div>
+                <div class="stat-card">
+                    <h3>平均溢折價</h3>
+                    <div class="value">${avgPremium.toFixed(2)}%</div>
+                    <div class="change">全市場平均</div>
+                </div>
+                <div class="stat-card">
+                    <h3>溢價交易</h3>
+                    <div class="value">${positiveCount}</div>
+                    <div class="change">檔 (${(positiveCount/totalCB*100).toFixed(1)}%)</div>
+                </div>
+                <div class="stat-card">
+                    <h3>折價交易</h3>
+                    <div class="value">${negativeCount}</div>
+                    <div class="change">檔 (${(negativeCount/totalCB*100).toFixed(1)}%)</div>
+                </div>
+            `;
+
+            document.getElementById('stats-grid').innerHTML = statsHTML;
+        }
+
+        function loadQuoteTable() {
+            const tbody = document.getElementById('quote-tbody');
+            if (!currentData.quote || currentData.quote.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="no-data">尚未載入資料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = currentData.quote.map(row => {
+                const premium = parseFloat(row['溢(折)價%']) || 0;
+                const premiumClass = premium >= 0 ? 'positive' : 'negative';
+                
+                return `
+                    <tr>
+                        <td>${row['可轉債代碼'] || '-'}</td>
+                        <td>${row['可轉債名稱'] || '-'}</td>
+                        <td>${row['產業'] || '-'}</td>
+                        <td>${row['權利金(佰元報價)'] || '-'}</td>
+                        <td>${row['轉換價格'] || '-'}</td>
+                        <td>${row['CB參考價'] || '-'}</td>
+                        <td class="${premiumClass}">${premium.toFixed(2)}%</td>
+                        <td>${parseFloat(row['剩餘年期'] || 0).toFixed(2)}</td>
+                        <td>${row['選擇權到期日'] || '-'}</td>
+                        <td>${row['擔保銀行/信用評等(TCRI)'] || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function loadFilterOptions() {
+            if (!currentData.quote) return;
+
+            // 產業選項
+            const industries = [...new Set(currentData.quote.map(row => row['產業']).filter(x => x))];
+            const industrySelect = document.getElementById('filter-industry');
+            industrySelect.innerHTML = '<option value="">全部產業</option>' + 
+                industries.map(ind => `<option value="${ind}">${ind}</option>`).join('');
+
+            // 信評選項
+            const ratings = [...new Set(currentData.quote.map(row => row['擔保銀行/信用評等(TCRI)']).filter(x => x))];
+            const ratingSelect = document.getElementById('filter-rating');
+            ratingSelect.innerHTML = '<option value="">全部評等</option>' + 
+                ratings.map(rating => `<option value="${rating}">${rating}</option>`).join('');
+
+            loadFilterTable();
+        }
+
+        function loadFilterTable() {
+            const tbody = document.getElementById('filter-tbody');
+            if (!currentData.quote || currentData.quote.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="no-data">尚未載入資料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = currentData.quote.map(row => {
+                const premium = parseFloat(row['溢(折)價%']) || 0;
+                const premiumClass = premium >= 0 ? 'positive' : 'negative';
+                
+                return `
+                    <tr>
+                        <td>${row['可轉債代碼'] || '-'}</td>
+                        <td>${row['可轉債名稱'] || '-'}</td>
+                        <td>${row['產業'] || '-'}</td>
+                        <td>${row['CB參考價'] || '-'}</td>
+                        <td>${row['轉換價格'] || '-'}</td>
+                        <td class="${premiumClass}">${premium.toFixed(2)}%</td>
+                        <td>${parseFloat(row['剩餘年期'] || 0).toFixed(2)}</td>
+                        <td>${row['股價波動率120天%'] || '-'}</td>
+                        <td>${row['股價波動率240天%'] || '-'}</td>
+                        <td>${row['擔保銀行/信用評等(TCRI)'] || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function applyFilters() {
+            if (!currentData.quote) return;
+
+            const industry = document.getElementById('filter-industry').value;
+            const premiumMin = parseFloat(document.getElementById('filter-premium-min').value);
+            const premiumMax = parseFloat(document.getElementById('filter-premium-max').value);
+            const yearsMin = parseFloat(document.getElementById('filter-years-min').value);
+            const yearsMax = parseFloat(document.getElementById('filter-years-max').value);
+            const rating = document.getElementById('filter-rating').value;
+
+            const filtered = currentData.quote.filter(row => {
+                if (industry && row['產業'] !== industry) return false;
+                
+                const premium = parseFloat(row['溢(折)價%']) || 0;
+                if (!isNaN(premiumMin) && premium < premiumMin) return false;
+                if (!isNaN(premiumMax) && premium > premiumMax) return false;
+                
+                const years = parseFloat(row['剩餘年期']) || 0;
+                if (!isNaN(yearsMin) && years < yearsMin) return false;
+                if (!isNaN(yearsMax) && years > yearsMax) return false;
+                
+                if (rating && row['擔保銀行/信用評等(TCRI)'] !== rating) return false;
+                
+                return true;
+            });
+
+            const tbody = document.getElementById('filter-tbody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="no-data">無符合條件的資料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(row => {
+                const premium = parseFloat(row['溢(折)價%']) || 0;
+                const premiumClass = premium >= 0 ? 'positive' : 'negative';
+                
+                return `
+                    <tr>
+                        <td>${row['可轉債代碼'] || '-'}</td>
+                        <td>${row['可轉債名稱'] || '-'}</td>
+                        <td>${row['產業'] || '-'}</td>
+                        <td>${row['CB參考價'] || '-'}</td>
+                        <td>${row['轉換價格'] || '-'}</td>
+                        <td class="${premiumClass}">${premium.toFixed(2)}%</td>
+                        <td>${parseFloat(row['剩餘年期'] || 0).toFixed(2)}</td>
+                        <td>${row['股價波動率120天%'] || '-'}</td>
+                        <td>${row['股價波動率240天%'] || '-'}</td>
+                        <td>${row['擔保銀行/信用評等(TCRI)'] || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-industry').value = '';
+            document.getElementById('filter-premium-min').value = '';
+            document.getElementById('filter-premium-max').value = '';
+            document.getElementById('filter-years-min').value = '';
+            document.getElementById('filter-years-max').value = '';
+            document.getElementById('filter-rating').value = '';
+            loadFilterTable();
+        }
+
+        function loadRedeemTable() {
+            const tbody = document.getElementById('redeem-tbody');
+            if (!currentData.redeem || currentData.redeem.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">目前無贖回資訊</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = currentData.redeem.map(row => `
+                <tr>
+                    <td>${row['公司代號'] || '-'}</td>
+                    <td>${row['公司名稱'] || '-'}</td>
+                    <td>${row['申報日期'] || '-'}</td>
+                    <td>${row['ASO到期日'] || '-'}</td>
+                    <td style="max-width: 500px;">${row['主旨'] || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function loadStopTable() {
+            const tbody = document.getElementById('stop-tbody');
+            if (!currentData.stop || currentData.stop.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">目前無停止轉換資訊</td></tr>';
+                return;
+            }
+
+            // 跳過標題列
+            const dataRows = currentData.stop.filter(row => row['債券代碼'] && row['債券代碼'] !== '債券代碼');
+
+            if (dataRows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">目前無停止轉換資訊</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = dataRows.map(row => `
+                <tr>
+                    <td>${row['債券代碼'] || '-'}</td>
+                    <td>${row['債券簡稱'] || '-'}</td>
+                    <td>${row['停止轉(交)換起日'] || '-'}</td>
+                    <td>${row['停止轉(交)換迄日'] || '-'}</td>
+                    <td>${row['停止轉(交)換事由'] || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function loadBalanceTable() {
+            const tbody = document.getElementById('balance-tbody');
+            if (!currentData.balance || currentData.balance.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">尚未載入資料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = currentData.balance.map(row => {
+                const change = parseFloat(row['增減數額']) || 0;
+                const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : '';
+                
+                return `
+                    <tr>
+                        <td>${row['證券代號'] || '-'}</td>
+                        <td>${row['證券名稱'] || '-'}</td>
+                        <td>${row['本週股額'] || '-'}</td>
+                        <td>${row['上週股額'] || '-'}</td>
+                        <td class="${changeClass}">${row['增減數額'] || '0'}</td>
+                        <td class="${changeClass}">${row['增減比率'] || '0'}</td>
+                        <td>${row['發行比率(剩餘比率)'] || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function loadAdjustTable() {
+            const tbody = document.getElementById('adjust-tbody');
+            if (!currentData.adjust || currentData.adjust.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="no-data">目前無價格調整資訊</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = currentData.adjust.map(row => `
+                <tr>
+                    <td>${row['公司代號'] || '-'}</td>
+                    <td>${row['公司名稱'] || '-'}</td>
+                    <td style="max-width: 600px;">${row['主旨'] || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function loadDailyTable() {
+            const tbody = document.getElementById('daily-tbody');
+            if (!currentData.daily || currentData.daily.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" class="no-data">尚未載入資料</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = currentData.daily.map(row => {
+                const premium = parseFloat(row['溢(折)價%']) || 0;
+                const premiumClass = premium >= 0 ? 'positive' : 'negative';
+                
+                return `
+                    <tr>
+                        <td>${row['代碼'] || '-'}</td>
+                        <td>${row['名稱  '] || '-'}</td>
+                        <td>${row['產業'] || '-'}</td>
+                        <td>${row['CB收盤價'] || '-'}</td>
+                        <td>${row['成交量'] || '-'}</td>
+                        <td>${row['股價'] || '-'}</td>
+                        <td>${row['轉換價格'] || '-'}</td>
+                        <td>${row['轉換價值'] || '-'}</td>
+                        <td class="${premiumClass}">${premium.toFixed(2)}%</td>
+                        <td>${row['YTM'] || '-'}</td>
+                        <td>${row['TCRI'] || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function loadPrimaryTable() {
+            const tbody = document.getElementById('primary-tbody');
+            if (!primaryData['發行案件']) {
+                tbody.innerHTML = '<tr><td colspan="15" class="no-data">尚未載入初級市場資料</td></tr>';
+                return;
+            }
+
+            // 過濾掉標題列
+            const dataRows = primaryData['發行案件'].filter((row, index) => {
+                return index > 0 && row['元大證債券部CB初級案件彙整表'];
+            });
+
+            if (dataRows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="15" class="no-data">目前無進行中的案件</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = dataRows.map(row => {
+                const keys = Object.keys(row);
+                return `
+                    <tr>
+                        <td>${row[keys[0]] || '-'}</td>
+                        <td>${row[keys[1]] || '-'}</td>
+                        <td>${row[keys[2]] || '-'}</td>
+                        <td>${row[keys[3]] || '-'}</td>
+                        <td>${row[keys[4]] || '-'}</td>
+                        <td>${row[keys[5]] || '-'}</td>
+                        <td>${row[keys[7]] || '-'}</td>
+                        <td>${row[keys[8]] || '-'}</td>
+                        <td>${row[keys[9]] || '-'}</td>
+                        <td>${row[keys[10]] || '-'}</td>
+                        <td>${row[keys[11]] || '-'}</td>
+                        <td>${row[keys[13]] || '-'}</td>
+                        <td>${row[keys[14]] || '-'}</td>
+                        <td>${row[keys[15]] || '-'}</td>
+                        <td>${row[keys[19]] || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function loadIssuedTable() {
+            const tbody = document.getElementById('issued-tbody');
+            if (!primaryData['已發行']) {
+                tbody.innerHTML = '<tr><td colspan="14" class="no-data">尚未載入已發行資料</td></tr>';
+                return;
+            }
+
+            const dataRows = primaryData['已發行'].filter(row => row['代碼']);
+
+            if (dataRows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="14" class="no-data">無已發行資料</td></tr>';
+                return;
+            }
+
+            // 只顯示最近50筆
+            const recentRows = dataRows.slice(0, 50);
+
+            tbody.innerHTML = recentRows.map(row => `
+                <tr>
+                    <td>${row['代碼'] || '-'}</td>
+                    <td>${row['發行標的'] || '-'}</td>
+                    <td>${row['TCRI/擔保'] || '-'}</td>
+                    <td>${row['額度(億元)'] || '-'}</td>
+                    <td>${row['主辦券商'] || '-'}</td>
+                    <td>${row['送件日'] || '-'}</td>
+                    <td>${row['生效日'] || '-'}</td>
+                    <td>${row['詢圈期間'] || '-'}</td>
+                    <td>${row['溢價率'] || '-'}</td>
+                    <td>${row['轉換價格'] || '-'}</td>
+                    <td>${row['掛牌日期'] || '-'}</td>
+                    <td>${row['承銷價格'] || '-'}</td>
+                    <td>${row['年期'] || '-'}</td>
+                    <td>${row['賣回條件'] || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        // 頁面載入時顯示提示
+        window.addEventListener('load', function() {
+            document.getElementById('quote-tbody').innerHTML = 
+                '<tr><td colspan="10" class="no-data">請上傳Excel檔案以查看資料</td></tr>';
+            document.getElementById('primary-tbody').innerHTML = 
+                '<tr><td colspan="15" class="no-data">請上傳CB發行案件彙整檔案以查看資料</td></tr>';
+            document.getElementById('issued-tbody').innerHTML = 
+                '<tr><td colspan="14" class="no-data">請上傳CB發行案件彙整檔案以查看資料</td></tr>';
+        });
+    </script>
+</body>
+</html>
