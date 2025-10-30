@@ -1,1 +1,34 @@
-
+{
+  "update_time": "2025-10-30 14:00:00",
+  "date": "20251030",
+  "count": 3,
+  "data": [
+    {
+      "code": "30454",
+      "name": "台灣大四",
+      "close_price": 112.50,
+      "change": 2.50,
+      "change_percent": 2.27,
+      "volume": 4645,
+      "update_time": "2025-10-30 14:00:00"
+    },
+    {
+      "code": "62822",
+      "name": "康舒二",
+      "close_price": 112.00,
+      "change": 7.00,
+      "change_percent": 6.67,
+      "volume": 2612,
+      "update_time": "2025-10-30 14:00:00"
+    },
+    {
+      "code": "82992",
+      "name": "群聯二",
+      "close_price": 145.50,
+      "change": -3.50,
+      "change_percent": -2.35,
+      "volume": 2463,
+      "update_time": "2025-10-30 14:00:00"
+    }
+  ]
+}
