@@ -17,6 +17,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            font-size: 15px;
         }
 
         .container {
@@ -232,14 +233,14 @@
             padding: 15px 10px;
             text-align: left;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 15px;
             white-space: nowrap;
         }
 
         td {
             padding: 12px 10px;
             border-bottom: 1px solid #e9ecef;
-            font-size: 14px;
+            font-size: 15px;
         }
 
         tbody tr:hover {
@@ -252,6 +253,11 @@
 
         .negative {
             color: #28a745;
+        }
+
+        .new-listing {
+            color: #dc3545;
+            font-weight: bold;
         }
 
         .highlight {
@@ -390,6 +396,9 @@
                             <th style="width: 70px;">轉換值</th>
                             <th style="width: 70px;">CB參考價</th>
                             <th style="width: 80px;">溢折價%</th>
+                            <th style="width: 70px;">掛牌最高</th>
+                            <th style="width: 70px;">掛牌最低</th>
+                            <th style="width: 70px;">高低振幅%</th>
                             <th style="width: 80px;">波動率120天</th>
                             <th style="width: 70px;">剩餘年期</th>
                             <th style="width: 90px;">賣回日</th>
@@ -444,15 +453,20 @@
                 <table id="board-table">
                     <thead>
                         <tr>
-                            <th>公司代號</th>
-                            <th>公司名稱</th>
-                            <th>發行金額</th>
-                            <th>案件狀態</th>
-                            <th>備註說明</th>
+                            <th>CB代碼</th>
+                            <th>發行標的</th>
+                            <th>TCRI/擔保</th>
+                            <th>發行量(億)</th>
+                            <th>主辦券商</th>
+                            <th>到期日</th>
+                            <th>董事會通過日</th>
+                            <th>溢價率</th>
+                            <th>轉換價格</th>
+                            <th>備註</th>
                         </tr>
                     </thead>
                     <tbody id="board-tbody">
-                        <tr><td colspan="5" class="no-data">目前無董事會公告案件</td></tr>
+                        <tr><td colspan="10" class="no-data">目前無董事會公告案件</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -588,6 +602,9 @@
                             <th>轉換價格</th>
                             <th>溢折價%</th>
                             <th>剩餘年期</th>
+                            <th>掛牌最高</th>
+                            <th>掛牌最低</th>
+                            <th>高低振幅%</th>
                             <th>波動率120天</th>
                             <th>波動率240天</th>
                             <th>信評</th>
@@ -653,13 +670,22 @@
                 <table id="balance-table">
                     <thead>
                         <tr>
-                            <th>證券代號</th>
-                            <th>證券名稱</th>
-                            <th>本週股額</th>
-                            <th>上週股額</th>
-                            <th>增減數額</th>
-                            <th>增減比率%</th>
-                            <th>剩餘比率%</th>
+                            <th style="width: 60px;">證券代號</th>
+                            <th style="width: 100px;">證券名稱</th>
+                            <th style="width: 80px; cursor: pointer;" onclick="sortBalanceTable('本週股額')" title="點擊排序">
+                                本週股額 <span id="sort-balance-current">⇅</span>
+                            </th>
+                            <th style="width: 80px;">上週股額</th>
+                            <th style="width: 80px; cursor: pointer;" onclick="sortBalanceTable('增減數額')" title="點擊排序">
+                                增減數額 <span id="sort-balance-change">⇅</span>
+                            </th>
+                            <th style="width: 80px; cursor: pointer;" onclick="sortBalanceTable('增減比率')" title="點擊排序">
+                                增減比率% <span id="sort-balance-ratio">⇅</span>
+                            </th>
+                            <th style="width: 80px;">剩餘比率%</th>
+                            <th style="width: 70px;">掛牌最高</th>
+                            <th style="width: 70px;">掛牌最低</th>
+                            <th style="width: 70px;">高低振幅%</th>
                         </tr>
                     </thead>
                     <tbody id="balance-tbody"></tbody>
@@ -704,6 +730,9 @@
                             <th style="width: 70px;">轉換價格</th>
                             <th style="width: 70px;">轉換價值</th>
                             <th style="width: 80px;">溢折價%</th>
+                            <th style="width: 70px;">掛牌最高</th>
+                            <th style="width: 70px;">掛牌最低</th>
+                            <th style="width: 70px;">高低振幅%</th>
                             <th style="width: 70px;">YTM</th>
                             <th style="width: 70px;">TCRI</th>
                         </tr>
@@ -717,9 +746,11 @@
     <script>
         let workbookData = {};
         let primaryData = {};
+        let priceHistoryData = {};
         let currentData = {};
         let issuedDataFull = [];
         let issuedSortOrder = {};
+        let balanceSortOrder = {};
 
         // 頁面載入時自動讀取檔案
         window.addEventListener('load', function() {
@@ -762,14 +793,30 @@
                     });
                 }
 
+                // 載入CB歷史掛牌最高低價查詢
+                const response3 = await fetch('CB歷史掛牌最高低價查詢.xlsx');
+                if (response3.ok) {
+                    const arrayBuffer3 = await response3.arrayBuffer();
+                    const data3 = new Uint8Array(arrayBuffer3);
+                    const workbook3 = XLSX.read(data3, {type: 'array'});
+                    
+                    priceHistoryData = {};
+                    workbook3.SheetNames.forEach(sheetName => {
+                        priceHistoryData[sheetName] = XLSX.utils.sheet_to_json(workbook3.Sheets[sheetName], {
+                            raw: false,
+                            defval: ''
+                        });
+                    });
+                }
+
                 updateTime();
-                document.getElementById('data-source').textContent = '元大每週CB資料庫 + CB發行案件彙整';
+                document.getElementById('data-source').textContent = '元大每週CB資料庫 + CB發行案件彙整 + CB歷史掛牌最高低價查詢';
                 
                 loadAllData();
                 loadPrimaryData();
             } catch (error) {
                 console.error('載入失敗:', error);
-                document.getElementById('data-source').textContent = '檔案載入失敗，請確認檔案位置';
+                document.getElementById('data-source').textContent = '檔案載入失敗,請確認檔案位置';
             }
         }
 
@@ -777,6 +824,31 @@
             const now = new Date();
             document.getElementById('update-time').textContent = 
                 `更新時間: ${now.toLocaleString('zh-TW')}`;
+        }
+
+        // 根據代碼獲取歷史價格資料
+        function getPriceHistory(code) {
+            if (!priceHistoryData['CB歷年最高最低價']) {
+                return { highest: '-', lowest: '-', range: '-' };
+            }
+            
+            const priceData = priceHistoryData['CB歷年最高最低價'].find(row => 
+                row['代號'] == code
+            );
+            
+            if (!priceData) {
+                return { highest: '-', lowest: '-', range: '-' };
+            }
+            
+            const highest = parseFloat(priceData['最高價']) || 0;
+            const lowest = parseFloat(priceData['最低價']) || 0;
+            const range = highest && lowest ? ((highest - lowest) / lowest * 100).toFixed(2) : '-';
+            
+            return {
+                highest: highest || '-',
+                lowest: lowest || '-',
+                range: range
+            };
         }
 
         // Tab切換
@@ -871,13 +943,14 @@
         function loadQuoteTable() {
             const tbody = document.getElementById('quote-tbody');
             if (!currentData.quote || currentData.quote.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="13" class="no-data">尚未載入資料</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="16" class="no-data">尚未載入資料</td></tr>';
                 return;
             }
 
             tbody.innerHTML = currentData.quote.map(row => {
                 const premium = parseFloat(row['溢(折)價%']) || 0;
                 const premiumClass = premium >= 0 ? 'positive' : 'negative';
+                const priceHistory = getPriceHistory(row['可轉債代碼']);
                 
                 return `
                     <tr>
@@ -890,6 +963,9 @@
                         <td>${parseFloat(row['CB轉換價值'] || 0).toFixed(2)}</td>
                         <td>${row['CB參考價'] || '-'}</td>
                         <td class="${premiumClass}">${premium.toFixed(2)}%</td>
+                        <td>${priceHistory.highest}</td>
+                        <td>${priceHistory.lowest}</td>
+                        <td>${priceHistory.range}${priceHistory.range !== '-' ? '%' : ''}</td>
                         <td>${row['股價波動率120天%'] || '-'}</td>
                         <td>${parseFloat(row['剩餘年期'] || 0).toFixed(2)}</td>
                         <td>${row['賣回日期(B)'] || '-'}</td>
@@ -920,13 +996,14 @@
         function loadFilterTable() {
             const tbody = document.getElementById('filter-tbody');
             if (!currentData.quote || currentData.quote.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" class="no-data">尚未載入資料</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="13" class="no-data">尚未載入資料</td></tr>';
                 return;
             }
 
             tbody.innerHTML = currentData.quote.map(row => {
                 const premium = parseFloat(row['溢(折)價%']) || 0;
                 const premiumClass = premium >= 0 ? 'positive' : 'negative';
+                const priceHistory = getPriceHistory(row['可轉債代碼']);
                 
                 return `
                     <tr>
@@ -937,6 +1014,9 @@
                         <td>${row['轉換價格'] || '-'}</td>
                         <td class="${premiumClass}">${premium.toFixed(2)}%</td>
                         <td>${parseFloat(row['剩餘年期'] || 0).toFixed(2)}</td>
+                        <td>${priceHistory.highest}</td>
+                        <td>${priceHistory.lowest}</td>
+                        <td>${priceHistory.range}${priceHistory.range !== '-' ? '%' : ''}</td>
                         <td>${row['股價波動率120天%'] || '-'}</td>
                         <td>${row['股價波動率240天%'] || '-'}</td>
                         <td>${row['擔保銀行/信用評等(TCRI)'] || '-'}</td>
@@ -1061,7 +1141,7 @@
         function loadBalanceTable() {
             const tbody = document.getElementById('balance-tbody');
             if (!currentData.balance || currentData.balance.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="no-data">尚未載入資料</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="no-data">尚未載入資料</td></tr>';
                 return;
             }
 
@@ -1115,7 +1195,9 @@
 
             tbody.innerHTML = currentData.balance.map(row => {
                 const change = parseFloat(row['增減數額']) || 0;
-                const changeClass = change > 0 ? 'positive' : change < 0 ? 'negative' : '';
+                let changeClass = change > 0 ? 'new-listing' : change < 0 ? 'negative' : '';
+                const priceHistory = getPriceHistory(row['證券代號']);
+                const changeNote = change > 0 ? ' (剛掛牌)' : '';
                 
                 return `
                     <tr>
@@ -1123,12 +1205,59 @@
                         <td>${row['證券名稱'] || '-'}</td>
                         <td>${row['本週股額'] || '-'}</td>
                         <td>${row['上週股額'] || '-'}</td>
-                        <td class="${changeClass}">${row['增減數額'] || '0'}</td>
+                        <td class="${changeClass}">${row['增減數額'] || '0'}${changeNote}</td>
                         <td class="${changeClass}">${row['增減比率'] || '0'}</td>
                         <td>${row['發行比率(剩餘比率)'] || '-'}</td>
+                        <td>${priceHistory.highest}</td>
+                        <td>${priceHistory.lowest}</td>
+                        <td>${priceHistory.range}${priceHistory.range !== '-' ? '%' : ''}</td>
                     </tr>
                 `;
             }).join('');
+        }
+
+        function sortBalanceTable(column) {
+            if (!balanceSortOrder[column]) {
+                balanceSortOrder[column] = 'desc'; // 預設降序
+            } else {
+                balanceSortOrder[column] = balanceSortOrder[column] === 'asc' ? 'desc' : 'asc';
+            }
+            
+            const order = balanceSortOrder[column];
+            const tbody = document.getElementById('balance-tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            const columnIndex = {
+                '本週股額': 2,
+                '增減數額': 4,
+                '增減比率': 5
+            };
+            
+            const idx = columnIndex[column];
+            
+            rows.sort((a, b) => {
+                let aVal = a.cells[idx].textContent.replace(' (剛掛牌)', '');
+                let bVal = b.cells[idx].textContent.replace(' (剛掛牌)', '');
+                
+                const aNum = parseFloat(aVal) || 0;
+                const bNum = parseFloat(bVal) || 0;
+                return order === 'asc' ? aNum - bNum : bNum - aNum;
+            });
+            
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+            
+            // 更新排序圖示
+            document.querySelectorAll('[id^="sort-balance-"]').forEach(el => el.textContent = '⇅');
+            const sortIconMap = {
+                '本週股額': 'sort-balance-current',
+                '增減數額': 'sort-balance-change',
+                '增減比率': 'sort-balance-ratio'
+            };
+            const iconId = sortIconMap[column];
+            if (iconId) {
+                document.getElementById(iconId).textContent = order === 'asc' ? '↑' : '↓';
+            }
         }
 
         function loadAdjustTable() {
@@ -1150,13 +1279,14 @@
         function loadDailyTable() {
             const tbody = document.getElementById('daily-tbody');
             if (!currentData.daily || currentData.daily.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" class="no-data">尚未載入資料</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="14" class="no-data">尚未載入資料</td></tr>';
                 return;
             }
 
             tbody.innerHTML = currentData.daily.map(row => {
                 const premium = parseFloat(row['溢(折)價%']) || 0;
                 const premiumClass = premium >= 0 ? 'positive' : 'negative';
+                const priceHistory = getPriceHistory(row['代碼']);
                 
                 return `
                     <tr>
@@ -1169,6 +1299,9 @@
                         <td>${row['轉換價格'] || '-'}</td>
                         <td>${parseFloat(row['轉換價值'] || 0).toFixed(2)}</td>
                         <td class="${premiumClass}">${premium.toFixed(2)}%</td>
+                        <td>${priceHistory.highest}</td>
+                        <td>${priceHistory.lowest}</td>
+                        <td>${priceHistory.range}${priceHistory.range !== '-' ? '%' : ''}</td>
                         <td>${row['YTM'] || '-'}</td>
                         <td>${row['TCRI'] || '-'}</td>
                     </tr>
@@ -1178,43 +1311,82 @@
 
         function loadPrimaryTable() {
             const tbody = document.getElementById('primary-tbody');
+            const boardTbody = document.getElementById('board-tbody');
+            
             if (!primaryData['發行案件']) {
                 tbody.innerHTML = '<tr><td colspan="15" class="no-data">尚未載入初級市場資料</td></tr>';
+                boardTbody.innerHTML = '<tr><td colspan="10" class="no-data">尚未載入董事會公告資料</td></tr>';
                 return;
             }
 
             // 過濾掉標題列
-            const dataRows = primaryData['發行案件'].filter((row, index) => {
+            const allRows = primaryData['發行案件'].filter((row, index) => {
                 return index > 0 && row['元大證債券部CB初級案件彙整表'];
             });
 
-            if (dataRows.length === 0) {
+            // 分離詢圈/競拍案件和董事會公告案件
+            const activeRows = allRows.filter(row => {
+                const keys = Object.keys(row);
+                const type = row[keys[1]]; // 詢圈/競拍欄位
+                return type === '詢圈' || type === '競拍';
+            });
+
+            const boardRows = allRows.filter(row => {
+                const keys = Object.keys(row);
+                const type = row[keys[1]]; // 詢圈/競拍欄位
+                return !type || (type !== '詢圈' && type !== '競拍');
+            });
+
+            // 載入詢圈/競拍案件
+            if (activeRows.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="15" class="no-data">目前無進行中的案件</td></tr>';
-                return;
+            } else {
+                tbody.innerHTML = activeRows.map(row => {
+                    const keys = Object.keys(row);
+                    return `
+                        <tr>
+                            <td>${row[keys[0]] || '-'}</td>
+                            <td>${row[keys[2]] || '-'}</td>
+                            <td>${row[keys[1]] || '-'}</td>
+                            <td>${row[keys[4]] || '-'}</td>
+                            <td>${row[keys[5]] || '-'}</td>
+                            <td>${row[keys[6]] || '-'}</td>
+                            <td>${row[keys[8]] || '-'}</td>
+                            <td>${row[keys[9]] || '-'}</td>
+                            <td>${row[keys[10]] || '-'}</td>
+                            <td>${row[keys[11]] || '-'}</td>
+                            <td>${row[keys[12]] || '-'}</td>
+                            <td>${row[keys[14]] || '-'}</td>
+                            <td>${row[keys[15]] || '-'}</td>
+                            <td>${row[keys[16]] || '-'}</td>
+                            <td>${row[keys[20]] || '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
             }
 
-            tbody.innerHTML = dataRows.map(row => {
-                const keys = Object.keys(row);
-                return `
-                    <tr>
-                        <td>${row[keys[0]] || '-'}</td>
-                        <td>${row[keys[1]] || '-'}</td>
-                        <td>${row[keys[2]] || '-'}</td>
-                        <td>${row[keys[3]] || '-'}</td>
-                        <td>${row[keys[4]] || '-'}</td>
-                        <td>${row[keys[5]] || '-'}</td>
-                        <td>${row[keys[7]] || '-'}</td>
-                        <td>${row[keys[8]] || '-'}</td>
-                        <td>${row[keys[9]] || '-'}</td>
-                        <td>${row[keys[10]] || '-'}</td>
-                        <td>${row[keys[11]] || '-'}</td>
-                        <td>${row[keys[13]] || '-'}</td>
-                        <td>${row[keys[14]] || '-'}</td>
-                        <td>${row[keys[15]] || '-'}</td>
-                        <td>${row[keys[19]] || '-'}</td>
-                    </tr>
-                `;
-            }).join('');
+            // 載入董事會公告案件
+            if (boardRows.length === 0) {
+                boardTbody.innerHTML = '<tr><td colspan="10" class="no-data">目前無董事會公告案件</td></tr>';
+            } else {
+                boardTbody.innerHTML = boardRows.map(row => {
+                    const keys = Object.keys(row);
+                    return `
+                        <tr>
+                            <td>${row[keys[0]] || '-'}</td>
+                            <td>${row[keys[2]] || '-'}</td>
+                            <td>${row[keys[3]] || '-'}</td>
+                            <td>${row[keys[4]] || '-'}</td>
+                            <td>${row[keys[5]] || '-'}</td>
+                            <td>${row[keys[6]] || '-'}</td>
+                            <td>${row[keys[8]] || '-'}</td>
+                            <td>${row[keys[9]] || '-'}</td>
+                            <td>${row[keys[10]] || '-'}</td>
+                            <td>${row[keys[20]] || '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
         }
 
         function loadIssuedTable() {
