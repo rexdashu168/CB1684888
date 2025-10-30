@@ -1,1 +1,302 @@
-
+{
+  "week_period": "2025/10/20~2025/10/23",
+  "date": "2025-10-23",
+  "top_volume": [
+    {
+      "rank": 1,
+      "code": "30454",
+      "name": "台灣大四",
+      "volume": 4645
+    },
+    {
+      "rank": 2,
+      "code": "62822",
+      "name": "康舒二",
+      "volume": 2612
+    },
+    {
+      "rank": 3,
+      "code": "82992",
+      "name": "群聯二",
+      "volume": 2463
+    },
+    {
+      "rank": 4,
+      "code": "84221",
+      "name": "可寧衛一",
+      "volume": 2376
+    },
+    {
+      "rank": 5,
+      "code": "61635",
+      "name": "華電網五",
+      "volume": 2252
+    },
+    {
+      "rank": 6,
+      "code": "23372",
+      "name": "旺宏二",
+      "volume": 2214
+    },
+    {
+      "rank": 7,
+      "code": "62194",
+      "name": "富旺四",
+      "volume": 2048
+    },
+    {
+      "rank": 8,
+      "code": "65841",
+      "name": "南俊國際一",
+      "volume": 1423
+    },
+    {
+      "rank": 9,
+      "code": "811210",
+      "name": "至上十",
+      "volume": 1376
+    },
+    {
+      "rank": 10,
+      "code": "27531",
+      "name": "八方雲集一",
+      "volume": 1349
+    }
+  ],
+  "top_gainers": [
+    {
+      "rank": 1,
+      "code": "33571",
+      "name": "臺慶科一",
+      "close_price": 149.0,
+      "change_pct": 11.19
+    },
+    {
+      "rank": 2,
+      "code": "23372",
+      "name": "旺宏二",
+      "close_price": 130.5,
+      "change_pct": 11.06
+    },
+    {
+      "rank": 3,
+      "code": "36894",
+      "name": "湧德四",
+      "close_price": 168.0,
+      "change_pct": 9.8
+    },
+    {
+      "rank": 4,
+      "code": "62843",
+      "name": "佳邦三",
+      "close_price": 117.2,
+      "change_pct": 7.52
+    },
+    {
+      "rank": 5,
+      "code": "61635",
+      "name": "華電網五",
+      "close_price": 114.9,
+      "change_pct": 7.28
+    },
+    {
+      "rank": 6,
+      "code": "62822",
+      "name": "康舒二",
+      "close_price": 112.0,
+      "change_pct": 6.67
+    },
+    {
+      "rank": 7,
+      "code": "37075",
+      "name": "漢磊五",
+      "close_price": 149.0,
+      "change_pct": 6.58
+    },
+    {
+      "rank": 8,
+      "code": "65841",
+      "name": "南俊國際一",
+      "close_price": 150.0,
+      "change_pct": 6.53
+    },
+    {
+      "rank": 9,
+      "code": "84041",
+      "name": "百和興業一KY",
+      "close_price": 122.6,
+      "change_pct": 5.6
+    },
+    {
+      "rank": 10,
+      "code": "66451",
+      "name": "金萬林一創",
+      "close_price": 112.35,
+      "change_pct": 5.59
+    }
+  ],
+  "top_losers": [
+    {
+      "rank": 1,
+      "code": "47223",
+      "name": "國精化三",
+      "close_price": 130.0,
+      "change_pct": -8.74
+    },
+    {
+      "rank": 2,
+      "code": "84672",
+      "name": "波力二KY",
+      "close_price": 110.65,
+      "change_pct": -6.15
+    },
+    {
+      "rank": 3,
+      "code": "61965",
+      "name": "帆宣五",
+      "close_price": 172.0,
+      "change_pct": -5.49
+    },
+    {
+      "rank": 4,
+      "code": "33133",
+      "name": "斐成三",
+      "close_price": 117.5,
+      "change_pct": -5.05
+    },
+    {
+      "rank": 5,
+      "code": "84891",
+      "name": "三貝德一",
+      "close_price": 160.0,
+      "change_pct": -4.76
+    },
+    {
+      "rank": 6,
+      "code": "52843",
+      "name": "jpp三KY",
+      "close_price": 180.0,
+      "change_pct": -4.26
+    },
+    {
+      "rank": 7,
+      "code": "80282",
+      "name": "昇陽半導體二",
+      "close_price": 126.05,
+      "change_pct": -4.14
+    },
+    {
+      "rank": 8,
+      "code": "54342",
+      "name": "崇越二",
+      "close_price": 173.0,
+      "change_pct": -3.89
+    },
+    {
+      "rank": 9,
+      "code": "69821",
+      "name": "大井泵浦一",
+      "close_price": 109.15,
+      "change_pct": -3.49
+    },
+    {
+      "rank": 10,
+      "code": "67531",
+      "name": "龍德造船一",
+      "close_price": 125.0,
+      "change_pct": -3.4
+    }
+  ],
+  "conversions": [
+    {
+      "code": "64146",
+      "name": "樺漢六",
+      "this_week": 10000,
+      "last_week": 13940,
+      "converted": -3940,
+      "remaining_pct": 66.66
+    },
+    {
+      "code": "62235",
+      "name": "旺矽五",
+      "this_week": 19305,
+      "last_week": 22999,
+      "converted": -3694,
+      "remaining_pct": 55.15
+    },
+    {
+      "code": "36534",
+      "name": "健策四",
+      "this_week": 9659,
+      "last_week": 11264,
+      "converted": -1605,
+      "remaining_pct": 32.19
+    },
+    {
+      "code": "82992",
+      "name": "群聯二",
+      "this_week": 54775,
+      "last_week": 56279,
+      "converted": -1504,
+      "remaining_pct": 91.29
+    },
+    {
+      "code": "64723",
+      "name": "保瑞三",
+      "this_week": 5128,
+      "last_week": 5982,
+      "converted": -854,
+      "remaining_pct": 30.16
+    }
+  ],
+  "redemptions": [
+    {
+      "code": "99211",
+      "name": "巨大一",
+      "original": 40000,
+      "outstanding": 759,
+      "remaining_pct": 1.89,
+      "delist_date": "2025/10/30"
+    },
+    {
+      "code": "52843",
+      "name": "jpp三KY",
+      "original": 3000,
+      "outstanding": 32,
+      "remaining_pct": 1.06,
+      "delist_date": "2025/11/17"
+    },
+    {
+      "code": "64421",
+      "name": "光聖一",
+      "original": 10000,
+      "outstanding": 1731,
+      "remaining_pct": 17.31,
+      "delist_date": "2025/11/19"
+    },
+    {
+      "code": "64723",
+      "name": "保瑞三",
+      "original": 17000,
+      "outstanding": 5128,
+      "remaining_pct": 30.16,
+      "delist_date": "2025/11/21"
+    },
+    {
+      "code": "64144",
+      "name": "樺漢四",
+      "original": 10000,
+      "outstanding": 136,
+      "remaining_pct": 1.36,
+      "delist_date": "2025/11/21"
+    },
+    {
+      "code": "34912",
+      "name": "昇達科二",
+      "original": 10000,
+      "outstanding": 5386,
+      "remaining_pct": 53.86,
+      "delist_date": "2025/12/8"
+    }
+  ]
+}

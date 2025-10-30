@@ -1,1 +1,82 @@
-
+{
+  "week_period": "2025/MM/DD~2025/MM/DD",
+  "date": "2025-MM-DD",
+  "top_volume": [
+    {
+      "rank": 1,
+      "code": "",
+      "name": "",
+      "volume": 0
+    }
+  ],
+  "top_gainers": [
+    {
+      "rank": 1,
+      "code": "",
+      "name": "",
+      "close_price": 0,
+      "change_pct": 0
+    }
+  ],
+  "top_losers": [
+    {
+      "rank": 1,
+      "code": "",
+      "name": "",
+      "close_price": 0,
+      "change_pct": 0
+    }
+  ],
+  "conversions": [
+    {
+      "code": "",
+      "name": "",
+      "this_week": 0,
+      "last_week": 0,
+      "converted": 0,
+      "remaining_pct": 0
+    }
+  ],
+  "new_listings": [
+    {
+      "code": "",
+      "name": "",
+      "method": "競拍/詢圈",
+      "amount": 0,
+      "conversion_price": 0,
+      "listing_date": ""
+    }
+  ],
+  "redemptions": [
+    {
+      "code": "",
+      "name": "",
+      "original": 0,
+      "outstanding": 0,
+      "remaining_pct": 0,
+      "delist_date": ""
+    }
+  ],
+  "putbacks": [
+    {
+      "code": "",
+      "name": "",
+      "putback_date": "",
+      "original": 0,
+      "outstanding": 0,
+      "remaining_pct": 0
+    }
+  ],
+  "maturities": [
+    {
+      "code": "",
+      "name": "",
+      "maturity_date": "",
+      "original": 0,
+      "outstanding": 0,
+      "stop_conversion_start": "",
+      "stop_conversion_end": "",
+      "remaining_pct": 0
+    }
+  ]
+}
