@@ -884,6 +884,7 @@
         // 根據代碼獲取歷史價格資料
         function getPriceHistory(code) {
             if (!priceHistoryData['CB歷年最高最低價']) {
+                console.log('價格資料尚未載入');
                 return { highest: '-', lowest: '-', range: '-' };
             }
             
@@ -896,6 +897,7 @@
             });
             
             if (!priceData) {
+                console.log(`代碼 ${code} (${codeNum}) 找不到價格資料`);
                 return { highest: '-', lowest: '-', range: '-' };
             }
             
@@ -903,6 +905,22 @@
             const highest = parseFloat(priceData['掛牌最高'] || priceData['最高價']) || 0;
             const lowest = parseFloat(priceData['掛牌最低'] || priceData['最低價']) || 0;
             const range = highest && lowest ? ((highest - lowest) / lowest * 100).toFixed(2) : '-';
+            
+            // 除錯:僅對第一筆顯示詳細資訊
+            if (window.priceDebugCount === undefined) {
+                window.priceDebugCount = 0;
+            }
+            if (window.priceDebugCount < 3) {
+                console.log(`代碼 ${code} 價格匹配:`, {
+                    codeNum,
+                    found: true,
+                    priceData,
+                    highest,
+                    lowest,
+                    range
+                });
+                window.priceDebugCount++;
+            }
             
             return {
                 highest: highest || '-',
@@ -1007,12 +1025,7 @@
                 return;
             }
 
-            // 除錯:檢查第一筆資料的價格匹配
-            if (currentData.quote.length > 0) {
-                const firstCode = currentData.quote[0]['可轉債代碼'];
-                const testPrice = getPriceHistory(firstCode);
-                console.log('測試價格匹配 - 代碼:', firstCode, '結果:', testPrice);
-            }
+            console.log('開始載入即時報價表格,共', currentData.quote.length, '筆資料');
 
             tbody.innerHTML = currentData.quote.map(row => {
                 const premium = parseFloat(row['溢(折)價%']) || 0;
