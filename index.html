@@ -500,16 +500,16 @@
                 <table id="board-table">
                     <thead>
                         <tr>
-                            <th>CB代碼</th>
-                            <th>發行標的</th>
-                            <th>TCRI/擔保</th>
-                            <th>發行量(億)</th>
-                            <th>主辦券商</th>
-                            <th>到期日</th>
-                            <th>董事會通過日</th>
-                            <th>溢價率</th>
-                            <th>轉換價格</th>
-                            <th>備註</th>
+                            <th style="width: 70px;">CB代碼</th>
+                            <th style="width: 100px;">發行標的</th>
+                            <th style="width: 90px;">TCRI/擔保</th>
+                            <th style="width: 70px;">發行量(億)</th>
+                            <th style="width: 90px;">主辦券商</th>
+                            <th style="width: 70px;">到期日</th>
+                            <th style="width: 90px;">董事會通過</th>
+                            <th style="width: 80px;">詢圈/競拍</th>
+                            <th style="width: 70px;">股本(億)</th>
+                            <th style="min-width: 120px;">備註</th>
                         </tr>
                     </thead>
                     <tbody id="board-tbody">
@@ -1366,22 +1366,24 @@
                 return;
             }
 
-            // 過濾掉標題列
-            const allRows = primaryData['發行案件'].filter((row, index) => {
-                return index > 0 && row['元大證債券部CB初級案件彙整表'];
+            // 找到「元大證債券部CB初級案件彙整表」標題的資料(詢圈/競拍案件)
+            const activeRows = primaryData['發行案件'].filter((row, index) => {
+                const firstKey = Object.keys(row)[0];
+                const firstValue = row[firstKey];
+                // 判斷是否為詢圈/競拍案件(在前面的表格中)
+                return firstValue && (firstValue === '詢圈' || firstValue === '競拍') && 
+                       row['元大證債券部CB初級案件彙整表']; // 確保有這個欄位
             });
 
-            // 分離詢圈/競拍案件和董事會公告案件
-            const activeRows = allRows.filter(row => {
+            // 找到董事會公告資料(從B32開始,索引31是標題,32開始是資料)
+            // 董事會資料沒有「元大證債券部CB初級案件彙整表」欄位
+            const boardRows = primaryData['發行案件'].filter((row, index) => {
                 const keys = Object.keys(row);
-                const type = row[keys[1]]; // 詢圈/競拍欄位
-                return type === '詢圈' || type === '競拍';
-            });
-
-            const boardRows = allRows.filter(row => {
-                const keys = Object.keys(row);
-                const type = row[keys[1]]; // 詢圈/競拍欄位
-                return !type || (type !== '詢圈' && type !== '競拍');
+                // 董事會資料的特徵:第二個欄位(索引1)是詢圈/競拍,但沒有「元大證債券部CB初級案件彙整表」
+                const secondKey = keys[1];
+                const secondValue = row[secondKey];
+                return secondValue && (secondValue === '詢圈' || secondValue === '競拍') && 
+                       !row['元大證債券部CB初級案件彙整表']; // 沒有這個欄位
             });
 
             // 載入詢圈/競拍案件
@@ -1418,18 +1420,21 @@
             } else {
                 boardTbody.innerHTML = boardRows.map(row => {
                     const keys = Object.keys(row);
+                    // 董事會資料結構: keys[1]=詢圈/競拍, keys[2]=CB代碼, keys[3]=發行標的, 
+                    // keys[4]=TCRI/擔保, keys[5]=發行量, keys[6]=主辦券商, keys[7]=到期日,
+                    // keys[8]=董事會通過, keys[9]=股本(億), keys[10]=備註
                     return `
                         <tr>
-                            <td>${row[keys[0]] || '-'}</td>
                             <td>${row[keys[2]] || '-'}</td>
                             <td>${row[keys[3]] || '-'}</td>
                             <td>${row[keys[4]] || '-'}</td>
                             <td>${row[keys[5]] || '-'}</td>
                             <td>${row[keys[6]] || '-'}</td>
+                            <td>${row[keys[7]] || '-'}</td>
                             <td>${row[keys[8]] || '-'}</td>
+                            <td>${row[keys[1]] || '-'}</td>
                             <td>${row[keys[9]] || '-'}</td>
                             <td>${row[keys[10]] || '-'}</td>
-                            <td>${row[keys[20]] || '-'}</td>
                         </tr>
                     `;
                 }).join('');
