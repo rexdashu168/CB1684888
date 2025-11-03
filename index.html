@@ -798,6 +798,11 @@
         let issuedDataFull = [];
         let issuedSortOrder = {};
         let balanceSortOrder = {};
+        // 新增的資料物件
+        let issuedData = {};        // 已發行案件相關 (基本資料/發行時程/賣回條件)
+        let filterData = {};        // 報價篩選器條件
+        let calculatorData = {};    // CBAS損益計算機
+        let biddingHistoryData = {}; // 競拍歷史資料
 
         // 頁面載入時自動讀取檔案
         window.addEventListener('load', function() {
@@ -827,26 +832,60 @@
                     });
                 });
                 
-                // 對應到workbookData(二級市場資料)
+                // 對應到workbookData (按照Rex大叔指定的對應關係)
                 workbookData = {
+                    // 即時報價
                     '報價單': allSheets['11_最新動態CBAS報價表'] || [],
+                    // 基本資料
                     '基本資料檔': allSheets['08_最新動態每週基本資料'] || [],
+                    // 贖回資訊 (從12_公司執行贖回權)
                     '公司執行贖回權': allSheets['12_公司執行贖回權'] || [],
+                    // 停止轉換
                     '停止轉換資訊': allSheets['13_停止轉換資訊'] || [],
+                    // 流通餘額
                     'CB流通在外餘額': allSheets['10_最新動態每週餘額表'] || [],
+                    // 轉換價調整
                     '轉換價格調整': allSheets['14_轉換價格調整'] || [],
+                    // 每日行情表
                     'CB每日行情表': allSheets['09_最新動態每週日行情'] || []
                 };
                 
-                // 對應到primaryData(初級市場資料)
+                // 對應到primaryData (初級市場資料)
                 primaryData = {
+                    // 發行案件 (詢圈/競拍)
                     '發行案件': allSheets['06_發行案件'] || [],
+                    // 董事會決議
                     '董事會決議': allSheets['07_董事會決議'] || []
                 };
                 
-                // 歷史價格資料
+                // 已發行案件相關資料
+                issuedData = {
+                    // 已發行案件基本資料
+                    '基本資料': allSheets['01_ALLCB基本資料'] || [],
+                    // 發行時程 (新增)
+                    '發行時程': allSheets['02_ALLCB發行時程'] || [],
+                    // 賣回條件 (賣回資訊)
+                    '賣回條件': allSheets['03_ALLCB賣回條件'] || []
+                };
+                
+                // 歷史價格資料 (也包含資金用途)
                 priceHistoryData = {
                     'CB歷年最高最低價': allSheets['00_CB代號名稱過濾及掛牌高低_20251031'] || []
+                };
+                
+                // 報價篩選器資料 (新增)
+                filterData = {
+                    '篩選條件': allSheets['05_CB競拍篩選條件區間'] || []
+                };
+                
+                // CBAS損益計算機 (新增)
+                calculatorData = {
+                    '損益計算': allSheets['15_CBAS選擇權履約損益計算機'] || []
+                };
+                
+                // 競拍歷史資料 (備用)
+                biddingHistoryData = {
+                    '競拍歷史': allSheets['04_所有CB競拍資料庫'] || []
                 };
                 
                 // 除錯資訊
@@ -854,7 +893,13 @@
                 console.log('📊 即時報價:', workbookData['報價單'].length, '筆');
                 console.log('📊 發行案件:', primaryData['發行案件'].length, '筆');
                 console.log('📊 董事會決議:', primaryData['董事會決議'].length, '筆');
-                console.log('📊 歷史價格:', priceHistoryData['CB歷年最高最低價'].length, '筆');
+                console.log('📊 已發行案件:', issuedData['基本資料'].length, '筆');
+                console.log('📊 發行時程:', issuedData['發行時程'].length, '筆');
+                console.log('📊 賣回條件:', issuedData['賣回條件'].length, '筆');
+                console.log('📊 歷史價格(含資金用途):', priceHistoryData['CB歷年最高最低價'].length, '筆');
+                console.log('📊 篩選條件:', filterData['篩選條件'].length, '筆');
+                console.log('📊 損益計算:', calculatorData['損益計算'].length, '筆');
+                console.log('📊 競拍歷史:', biddingHistoryData['競拍歷史'].length, '筆');
                 
                 if (priceHistoryData['CB歷年最高最低價'].length > 0) {
                     console.log('💰 價格資料載入成功!');
@@ -1717,3 +1762,9 @@
 
 </body>
 </html>
+
+
+
+
+
+
