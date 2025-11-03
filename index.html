@@ -360,7 +360,7 @@
         <div class="header">
             <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 10px;">
                 <span style="font-size: 42px;">🎯</span>
-                <h1 style="margin: 0; font-size: 36px; font-weight: 700;">元大可轉債查詢系統</h1>
+                <h1 style="margin: 0; font-size: 36px; font-weight: 700;">元大可轉債資料查詢系統</h1>
             </div>
             <p style="color: rgba(255,255,255,0.95); font-size: 16px; margin: 15px 0; font-weight: 500;">
                 競拍統計數據 | 智能模擬分析 | 投標價格試算
@@ -813,10 +813,34 @@
             try {
                 document.getElementById('data-source').textContent = '載入中...';
                 
-                // 載入00_CB代號名稱.xlsx (包含所有資料)
-                const response = await fetch('00_CB代號名稱.xlsx');
-                if (!response.ok) {
-                    throw new Error('無法載入00_CB代號名稱.xlsx');
+                // Excel檔案名稱(嘗試多種可能的路徑)
+                const possiblePaths = [
+                    '00_CB代號名稱.xlsx',
+                    encodeURIComponent('00_CB代號名稱.xlsx'),
+                    '00_CB%E4%BB%A3%E8%99%9F%E5%90%8D%E7%A8%B1.xlsx'
+                ];
+                
+                let response = null;
+                let workingPath = null;
+                
+                // 嘗試不同的路徑
+                for (const path of possiblePaths) {
+                    try {
+                        console.log('嘗試載入:', path);
+                        const testResponse = await fetch(path);
+                        if (testResponse.ok) {
+                            response = testResponse;
+                            workingPath = path;
+                            console.log('✅ 成功找到檔案:', path);
+                            break;
+                        }
+                    } catch (e) {
+                        console.log('❌ 路徑失敗:', path);
+                    }
+                }
+                
+                if (!response || !response.ok) {
+                    throw new Error('無法載入Excel檔案,請確認檔案已上傳到GitHub');
                 }
                 
                 const arrayBuffer = await response.arrayBuffer();
@@ -909,7 +933,7 @@
                 }
 
                 updateTime();
-                document.getElementById('data-source').textContent = '00_CB代號名稱.xlsx';
+                document.getElementById('data-source').textContent = workingPath || '00_CB代號名稱.xlsx';
                 
                 loadAllData();
                 loadPrimaryData();
