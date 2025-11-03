@@ -1435,100 +1435,91 @@
             const tbody = document.getElementById('primary-tbody');
             const boardTbody = document.getElementById('board-tbody');
             
-            if (!primaryData['發行案件']) {
+            // 檢查資料是否載入
+            if (!primaryData['發行案件'] && !primaryData['董事會決議']) {
                 tbody.innerHTML = '<tr><td colspan="15" class="no-data">尚未載入初級市場資料</td></tr>';
                 boardTbody.innerHTML = '<tr><td colspan="10" class="no-data">尚未載入董事會公告資料</td></tr>';
                 return;
             }
 
-            // 找到「元大證債券部CB初級案件彙整表」標題的資料(詢圈/競拍案件)
-            const activeRows = primaryData['發行案件'].filter((row, index) => {
-                const firstKey = Object.keys(row)[0];
-                const firstValue = row[firstKey];
-                // 判斷是否為詢圈/競拍案件(在前面的表格中)
-                return firstValue && (firstValue === '詢圈' || firstValue === '競拍') && 
-                       row['元大證債券部CB初級案件彙整表']; // 確保有這個欄位
-            });
-
-            // 找到董事會公告資料(從B32開始,索引31是標題,32開始是資料)
-            // 董事會資料沒有「元大證債券部CB初級案件彙整表」欄位
-            const boardRows = primaryData['發行案件'].filter((row, index) => {
-                const keys = Object.keys(row);
-                // 董事會資料的特徵:第二個欄位(索引1)是詢圈/競拍,但沒有「元大證債券部CB初級案件彙整表」
-                const secondKey = keys[1];
-                const secondValue = row[secondKey];
-                return secondValue && (secondValue === '詢圈' || secondValue === '競拍') && 
-                       !row['元大證債券部CB初級案件彙整表']; // 沒有這個欄位
-            });
-
-            // 載入詢圈/競拍案件
+            // 載入初級市場資訊 (06_發行案件)
+            const activeData = primaryData['發行案件'] || [];
+            // 過濾掉空白行
+            const activeRows = activeData.filter(row => row['股票代號'] && row['股票代號'].trim() !== '');
+            
             if (activeRows.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="15" class="no-data">目前無進行中的案件</td></tr>';
             } else {
                 tbody.innerHTML = activeRows.map(row => {
-                    const keys = Object.keys(row);
                     return `
                         <tr>
-                            <td>${row[keys[0]] || '-'}</td>
-                            <td>${row[keys[2]] || '-'}</td>
-                            <td>${row[keys[1]] || '-'}</td>
-                            <td>${row[keys[4]] || '-'}</td>
-                            <td>${row[keys[5]] || '-'}</td>
-                            <td>${row[keys[6]] || '-'}</td>
-                            <td>${row[keys[8]] || '-'}</td>
-                            <td>${row[keys[9]] || '-'}</td>
-                            <td>${row[keys[10]] || '-'}</td>
-                            <td>${row[keys[11]] || '-'}</td>
-                            <td>${row[keys[12]] || '-'}</td>
-                            <td>${row[keys[14]] || '-'}</td>
-                            <td>${row[keys[15]] || '-'}</td>
-                            <td>${row[keys[16]] || '-'}</td>
-                            <td>${row[keys[20]] || '-'}</td>
+                            <td>${row['標的代號'] || '-'}</td>
+                            <td>${row['發行標的'] || '-'}</td>
+                            <td>${row['詢圈/競拍'] || '-'}</td>
+                            <td>${row['TCRI/擔保'] || '-'}</td>
+                            <td>${row['發行量'] || '-'}</td>
+                            <td>${row['主辦券商'] || '-'}</td>
+                            <td>${row['生效日'] || '-'}</td>
+                            <td>${row['詢圈/投標期間'] || '-'}</td>
+                            <td>${row['溢價率'] || '-'}</td>
+                            <td>${row['轉換價'] || '-'}</td>
+                            <td>${row['掛牌日'] || '-'}</td>
+                            <td>${row['承銷價格'] || '-'}</td>
+                            <td>${row['年期'] || '-'}</td>
+                            <td>${row['賣回條件'] || '-'}</td>
+                            <td>${row['備註'] || '-'}</td>
                         </tr>
                     `;
                 }).join('');
+                console.log('✅ 初級市場資訊載入完成:', activeRows.length, '筆');
             }
 
-            // 載入董事會公告案件
+            // 載入董事會公告案件 (07_董事會決議)
+            const boardData = primaryData['董事會決議'] || [];
+            // 過濾掉空白行
+            const boardRows = boardData.filter(row => row['股鰾代號'] && row['股鰾代號'].trim() !== '');
+            
             if (boardRows.length === 0) {
                 boardTbody.innerHTML = '<tr><td colspan="10" class="no-data">目前無董事會公告案件</td></tr>';
             } else {
                 boardTbody.innerHTML = boardRows.map(row => {
-                    const keys = Object.keys(row);
-                    // 董事會資料結構: keys[1]=詢圈/競拍, keys[2]=CB代碼, keys[3]=發行標的, 
-                    // keys[4]=TCRI/擔保, keys[5]=發行量, keys[6]=主辦券商, keys[7]=到期日,
-                    // keys[8]=董事會通過, keys[9]=股本(億), keys[10]=備註
                     return `
                         <tr>
-                            <td>${row[keys[2]] || '-'}</td>
-                            <td>${row[keys[3]] || '-'}</td>
-                            <td>${row[keys[4]] || '-'}</td>
-                            <td>${row[keys[5]] || '-'}</td>
-                            <td>${row[keys[6]] || '-'}</td>
-                            <td>${row[keys[7]] || '-'}</td>
-                            <td>${row[keys[8]] || '-'}</td>
-                            <td>${row[keys[1]] || '-'}</td>
-                            <td>${row[keys[9]] || '-'}</td>
-                            <td>${row[keys[10]] || '-'}</td>
+                            <td>${row['CB代碼'] || '-'}</td>
+                            <td>${row['發行標的'] || '-'}</td>
+                            <td>${row['TCRI/擔保'] || '-'}</td>
+                            <td>${row['發行量'] || '-'}</td>
+                            <td>${row['主辦券商'] || '-'}</td>
+                            <td>${row['到期日'] || '-'}</td>
+                            <td>${row['董事會通過'] || '-'}</td>
+                            <td>${row['詢圈/競價'] || '-'}</td>
+                            <td>${row['股本(億)'] || '-'}</td>
+                            <td>${row['備註'] || '-'}</td>
                         </tr>
                     `;
                 }).join('');
+                console.log('✅ 董事會公告案件載入完成:', boardRows.length, '筆');
             }
         }
 
         function loadIssuedTable() {
             const tbody = document.getElementById('issued-tbody');
-            if (!primaryData['已發行']) {
+            
+            // 檢查資料是否載入 (使用 01_ALLCB基本資料)
+            if (!issuedData['基本資料']) {
                 tbody.innerHTML = '<tr><td colspan="14" class="no-data">尚未載入已發行資料</td></tr>';
                 return;
             }
 
-            issuedDataFull = primaryData['已發行'].filter(row => row['代碼']);
+            // 過濾有效資料 (有CB代號的)
+            issuedDataFull = issuedData['基本資料'].filter(row => row['CB代號'] && row['CB代號'].trim() !== '');
 
             if (issuedDataFull.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="14" class="no-data">無已發行資料</td></tr>';
                 return;
             }
+
+            console.log('✅ 歷史發行記錄載入完成:', issuedDataFull.length, '筆');
 
             // 計算日期範圍
             const dates = issuedDataFull.map(row => row['掛牌日期']).filter(d => d);
@@ -1539,8 +1530,8 @@
             }
 
             // 填充篩選選項
-            const tcriSet = new Set(issuedDataFull.map(row => row['TCRI/擔保']).filter(x => x));
-            const brokerSet = new Set(issuedDataFull.map(row => row['主辦券商']).filter(x => x));
+            const tcriSet = new Set(issuedDataFull.map(row => row['信用擔保']).filter(x => x));
+            const brokerSet = new Set(issuedDataFull.map(row => row['承銷券商']).filter(x => x));
             
             document.getElementById('issued-filter-tcri').innerHTML = '<option value="">全部</option>' +
                 Array.from(tcriSet).sort().map(t => `<option value="${t}">${t}</option>`).join('');
@@ -1555,8 +1546,23 @@
             const tbody = document.getElementById('issued-tbody');
             tbody.innerHTML = data.map(row => `
                 <tr>
-                    <td>${row['代碼'] || '-'}</td>
-                    <td>${row['發行標的'] || '-'}</td>
+                    <td>${row['CB代號'] || '-'}</td>
+                    <td>${row['名稱'] || '-'}</td>
+                    <td>${row['信用擔保'] || '-'}</td>
+                    <td>${row['發行規模'] || '-'}</td>
+                    <td>${row['承銷券商'] || '-'}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>${row['訂價溢價率'] || '-'}</td>
+                    <td>${row['轉換價格'] || '-'}</td>
+                    <td>${row['掛牌日期'] || '-'}</td>
+                    <td>${row['發行價格'] || '-'}</td>
+                    <td>${row['發行年期'] || '-'}</td>
+                    <td>-</td>
+                </tr>
+            `).join('');
+        }
                     <td>${row['TCRI/擔保'] || '-'}</td>
                     <td>${row['額度(億元)'] || '-'}</td>
                     <td>${row['主辦券商'] || '-'}</td>
@@ -1579,33 +1585,33 @@
             const name = document.getElementById('issued-filter-name').value.trim();
             if (name) {
                 filtered = filtered.filter(row => 
-                    (row['發行標的'] || '').includes(name) || 
-                    (row['代碼'] || '').includes(name)
+                    (row['名稱'] || '').includes(name) || 
+                    (row['CB代號'] || '').includes(name)
                 );
             }
             
             const tcri = document.getElementById('issued-filter-tcri').value;
             if (tcri) {
-                filtered = filtered.filter(row => row['TCRI/擔保'] === tcri);
+                filtered = filtered.filter(row => row['信用擔保'] === tcri);
             }
             
             const broker = document.getElementById('issued-filter-broker').value;
             if (broker) {
-                filtered = filtered.filter(row => row['主辦券商'] === broker);
+                filtered = filtered.filter(row => row['承銷券商'] === broker);
             }
             
             const years = document.getElementById('issued-filter-years').value;
             if (years) {
-                filtered = filtered.filter(row => (row['年期'] || '').includes(years));
+                filtered = filtered.filter(row => (row['發行年期'] || '').includes(years));
             }
             
             const amountMin = parseFloat(document.getElementById('issued-filter-amount-min').value);
             const amountMax = parseFloat(document.getElementById('issued-filter-amount-max').value);
             if (!isNaN(amountMin)) {
-                filtered = filtered.filter(row => parseFloat(row['額度(億元)'] || 0) >= amountMin);
+                filtered = filtered.filter(row => parseFloat(row['發行規模'] || 0) >= amountMin);
             }
             if (!isNaN(amountMax)) {
-                filtered = filtered.filter(row => parseFloat(row['額度(億元)'] || 0) <= amountMax);
+                filtered = filtered.filter(row => parseFloat(row['發行規模'] || 0) <= amountMax);
             }
             
             renderIssuedTable(filtered);
