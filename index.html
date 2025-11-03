@@ -813,34 +813,14 @@
             try {
                 document.getElementById('data-source').textContent = '載入中...';
                 
-                // Excel檔案名稱(嘗試多種可能的路徑)
-                const possiblePaths = [
-                    '00_CB代號名稱.xlsx',
-                    encodeURIComponent('00_CB代號名稱.xlsx'),
-                    '00_CB%E4%BB%A3%E8%99%9F%E5%90%8D%E7%A8%B1.xlsx'
-                ];
+                // 使用英文檔名避免編碼問題
+                const excelFile = 'CB_Data.xlsx';
                 
-                let response = null;
-                let workingPath = null;
+                console.log('載入檔案:', excelFile);
+                const response = await fetch(excelFile);
                 
-                // 嘗試不同的路徑
-                for (const path of possiblePaths) {
-                    try {
-                        console.log('嘗試載入:', path);
-                        const testResponse = await fetch(path);
-                        if (testResponse.ok) {
-                            response = testResponse;
-                            workingPath = path;
-                            console.log('✅ 成功找到檔案:', path);
-                            break;
-                        }
-                    } catch (e) {
-                        console.log('❌ 路徑失敗:', path);
-                    }
-                }
-                
-                if (!response || !response.ok) {
-                    throw new Error('無法載入Excel檔案,請確認檔案已上傳到GitHub');
+                if (!response.ok) {
+                    throw new Error(`無法載入 ${excelFile} (HTTP ${response.status})`);
                 }
                 
                 const arrayBuffer = await response.arrayBuffer();
@@ -933,7 +913,7 @@
                 }
 
                 updateTime();
-                document.getElementById('data-source').textContent = workingPath || '00_CB代號名稱.xlsx';
+                document.getElementById('data-source').textContent = 'CB_Data.xlsx';
                 
                 loadAllData();
                 loadPrimaryData();
@@ -1801,9 +1781,3 @@
 
 </body>
 </html>
-
-
-
-
-
-
