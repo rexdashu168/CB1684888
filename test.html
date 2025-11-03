@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>檔案測試</title>
+</head>
+<body>
+    <h1>Excel檔案路徑測試</h1>
+    <div id="result"></div>
+    
+    <script>
+        async function testPaths() {
+            const paths = [
+                '00_CB代號名稱.xlsx',
+                './00_CB代號名稱.xlsx',
+                '00_CB%E4%BB%A3%E8%99%9F%E5%90%8D%E7%A8%B1.xlsx'
+            ];
+            
+            let html = '<h2>測試結果:</h2>';
+            
+            for (const path of paths) {
+                try {
+                    html += `<p>測試: <code>${path}</code>`;
+                    const response = await fetch(path);
+                    html += ` - Status: ${response.status}`;
+                    
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        html += ` - Size: ${blob.size} bytes - ✅ <strong>成功!</strong>`;
+                    } else {
+                        html += ` - ❌ 失敗`;
+                    }
+                } catch (e) {
+                    html += ` - ❌ 錯誤: ${e.message}`;
+                }
+                html += '</p>';
+            }
+            
+            document.getElementById('result').innerHTML = html;
+        }
+        
+        testPaths();
+    </script>
+</body>
+</html>
