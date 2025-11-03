@@ -914,8 +914,17 @@
                 loadAllData();
                 loadPrimaryData();
             } catch (error) {
-                console.error('載入失敗:', error);
-                document.getElementById('data-source').textContent = '檔案載入失敗,請確認檔案位置';
+                console.error('❌ 載入失敗:', error);
+                console.error('❌ 錯誤詳情:', error.message);
+                
+                let errorMsg = '檔案載入失敗';
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMsg = '⚠️ 請使用HTTP伺服器開啟! 不能直接開啟HTML檔案';
+                    console.error('💡 解決方法: 使用 python -m http.server 8000 啟動伺服器');
+                }
+                
+                document.getElementById('data-source').textContent = errorMsg;
+                alert('⚠️ 無法載入資料!\n\n' + errorMsg + '\n\n請按F12查看Console了解詳情');
             }
         }
 
